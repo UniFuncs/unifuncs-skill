@@ -45,7 +45,7 @@ def search(
     page: int = 1,
     count: int = 10,
     format_type: str = "json"
-) -> Dict[str, Any]:
+) -> Dict[str, Any] | str:
     """
     调用 UniFuncs 搜索 API
 
@@ -60,7 +60,7 @@ def search(
         format_type: 返回格式 (json/markdown/md/text/txt)
 
     返回:
-        API 响应的 JSON 数据
+        API 响应的 JSON 数据，或纯文本字符串（当 format_type 为 markdown/text 时）
     """
     url = "https://api.unifuncs.com/api/web-search/search"
 
@@ -90,7 +90,12 @@ def search(
     try:
         with urllib.request.urlopen(req) as response:
             response_data = response.read().decode('utf-8')
-            return json.loads(response_data)
+            # 尝试解析为 JSON
+            try:
+                return json.loads(response_data)
+            except json.JSONDecodeError:
+                # API 返回的是纯文本格式（markdown/text），直接返回字符串
+                return response_data
     except urllib.error.HTTPError as e:
         error_msg = e.read().decode('utf-8')
         try:
@@ -122,8 +127,12 @@ def handle_error(code: int, message: str) -> None:
     sys.exit(1)
 
 
-def format_output(response: Dict[str, Any], output_format: str) -> str:
+def format_output(response: Dict[str, Any] | str, output_format: str) -> str:
     """格式化输出结果"""
+    # 如果已经是字符串（API 返回的文本格式），直接返回
+    if isinstance(response, str):
+        return response
+
     code = response.get('code', -1)
 
     # 检查错误
@@ -195,6 +204,10 @@ def main():
     args = parser.parse_args()
 
     # 验证参数
+    if not args.query or not args.query.strip():
+        print("错误: 搜索关键词不能为空", file=sys.stderr)
+        sys.exit(1)
+
     if not 1 <= args.count <= 50:
         print("错误: count 参数必须在 1-50 之间", file=sys.stderr)
         sys.exit(1)
