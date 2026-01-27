@@ -2,7 +2,7 @@
 name: unifuncs-search
 description: 使用 UniFuncs API 进行实时网络搜索，支持全球和中国地域，获取最新网络内容和新闻。当用户需要搜索、查找、联网获取信息时使用。
 argument-hint: [搜索关键词]
-allowed-tools: Bash(curl:*)
+allowed-tools: Bash(python*:*)
 ---
 
 # UniFuncs 实时搜索 Skill
@@ -16,22 +16,9 @@ allowed-tools: Bash(curl:*)
 
 ## 使用方法
 
-执行搜索：
 ```bash
-curl -X POST "https://api.unifuncs.com/api/web-search/search" \
-  -H "Authorization: Bearer $UNIFUNCS_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "$ARGUMENTS", "count": 10}'
+python3 scripts/search.py "搜索关键词"
+
+# 查看所有参数
+python3 scripts/search.py --help
 ```
-
-## 参数说明
-
-| 参数 | 说明 | 默认值 |
-|------|------|--------|
-| query | 搜索关键词 | 必填 |
-| area | `global` 或 `cn` | global |
-| count | 结果数量 (1-50) | 10 |
-
-## 更多信息
-
-- 详细 API 文档见 [api.md](references/api.md)
