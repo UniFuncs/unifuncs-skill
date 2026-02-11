@@ -2,16 +2,15 @@
 
 UniFuncs 是专为 AI 应用打造的 API 平台，提供高性能、安全可靠的搜索和内容服务。
 
-本仓库包含 4 个 Claude Code Skills，让你可以在 Claude Code 中直接使用 UniFuncs API。
+本仓库包含 3 个 Claude Code Skills，让你可以在 Claude Code 中直接使用 UniFuncs API。
 
 ## 可用 Skills
 
 | Skill | 目录 | 用途 | 触发词 |
 |-------|------|------|--------|
-| 实时搜索 | `unifuncs-search/` | 快速联网搜索，支持全球/中国地域 | 搜索、查找、联网 |
-| 网页阅读 | `unifuncs-reader/` | 读取网页、PDF、Word 等内容 | 阅读、抓取、提取 |
-| 深度搜索 | `unifuncs-deep-search/` | 高速全面的深度信息搜索 | 深度搜索、深搜 |
-| 深度研究 | `unifuncs-deep-research/` | 深度分析，产出万字报告 | 深度研究、深研 |
+| 网页搜索与阅读 | `unifuncs-web/` | 实时搜索 + 网页内容读取 | 搜索、查一下、读取网页 |
+| 深度搜索 | `unifuncs-deep-search/` | 高速全面的深度信息搜索 | ds、深度搜索、deep search |
+| 深度研究 | `unifuncs-deep-research/` | 多轮迭代研究，产出万字报告 | dr、深度研究、研究报告 |
 
 ## 安装
 
@@ -31,8 +30,7 @@ mkdir -p ~/.claude/skills
 
 3. 复制所有 Skill 目录到用户 skills 目录：
 ```bash
-cp -r /tmp/unifuncs-skill/unifuncs-search ~/.claude/skills/
-cp -r /tmp/unifuncs-skill/unifuncs-reader ~/.claude/skills/
+cp -r /tmp/unifuncs-skill/unifuncs-web ~/.claude/skills/
 cp -r /tmp/unifuncs-skill/unifuncs-deep-search ~/.claude/skills/
 cp -r /tmp/unifuncs-skill/unifuncs-deep-research ~/.claude/skills/
 ```
@@ -71,8 +69,7 @@ cd unifuncs-skill
 mkdir -p ~/.claude/skills
 
 # 复制所有 Skills
-cp -r unifuncs-search ~/.claude/skills/
-cp -r unifuncs-reader ~/.claude/skills/
+cp -r unifuncs-web ~/.claude/skills/
 cp -r unifuncs-deep-search ~/.claude/skills/
 cp -r unifuncs-deep-research ~/.claude/skills/
 ```
@@ -99,17 +96,17 @@ curl -fsSL https://raw.githubusercontent.com/UniFuncs/unifuncs-skill/main/instal
 安装后，在 Claude Code 中直接使用自然语言触发：
 
 ```
-# 实时搜索
+# 网页搜索
 "搜索 Claude Code 最新功能"
 
 # 网页阅读
-"阅读 https://example.com 的内容"
+"读取网页 https://example.com 的内容"
 
 # 深度搜索
-"深搜 AI 编程助手对比"
+"ds AI 编程助手对比"
 
 # 深度研究
-"深研 2024 年大语言模型发展趋势"
+"dr 2024 年大语言模型发展趋势"
 ```
 
 ## 目录结构
@@ -118,27 +115,24 @@ curl -fsSL https://raw.githubusercontent.com/UniFuncs/unifuncs-skill/main/instal
 unifuncs-skill/
 ├── README.md
 ├── install.sh
-├── unifuncs-search/
+├── unifuncs-web/
 │   ├── SKILL.md
-│   └── references/
-│       └── api.md
-├── unifuncs-reader/
-│   ├── SKILL.md
-│   └── references/
-│       └── api.md
+│   └── scripts/
+│       ├── web_search.py
+│       └── web_reader.py
 ├── unifuncs-deep-search/
 │   ├── SKILL.md
-│   └── references/
-│       └── api.md
+│   └── scripts/
+│       └── search.py
 └── unifuncs-deep-research/
     ├── SKILL.md
-    └── references/
-        └── api.md
+    └── scripts/
+        └── research.py
 ```
 
 ## API 文档
 
-详细 API 文档请参考各 Skill 目录下的 `references/api.md` 文件，或访问 [UniFuncs 官方文档](https://unifuncs.com/api/)。
+详细 API 文档请参考各 Skill 目录下的 `SKILL.md` 文件，或访问 [UniFuncs 官方文档](https://unifuncs.com/api/)。
 
 ## 其他接入方式
 

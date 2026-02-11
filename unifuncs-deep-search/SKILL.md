@@ -1,36 +1,206 @@
 ---
-name: unifuncs-deep-search
-description: 使用 UniFuncs API 进行深度搜索，高速全面地搜索信息。当用户需要深度搜索、深搜、全面信息收集时使用。
-argument-hint: [搜索问题]
-allowed-tools: Bash(curl:*)
+name: unifuncs-search
+description: "深度搜索 (Deep Search) - 自动搜索并整合成汇总文章。当用户说「ds」「深度搜索」「deep search」时使用。返回结构化汇总文章，无需手动筛选。"
+argument_hint: "[搜索关键词]"
+timeout: 1200000
+allowed_tools:
+  - Bash(python*:*)
 ---
 
-# UniFuncs 深度搜索 Skill
+# UniFuncs 深度搜索技能 (Deep Search)
 
-高速、准确、全面的深度搜索能力。
+## 定位说明
 
-## 首次使用配置
+**深度搜索 (Deep Search)** 是一个**一站式信息汇总**工具：
 
-1. 前往 https://unifuncs.com/account 获取 API Key
-2. 设置环境变量：`export UNIFUNCS_API_KEY="sk-your-api-key"`
+- 🔍 **自动搜索**：自动搜索多个相关网页
+- 📊 **智能整合**：提取关键信息并整合
+- 📝 **文章输出**：返回结构化的汇总文章
 
-## 使用方法
+---
 
-执行深度搜索：
-```bash
-curl -X POST "https://api.unifuncs.com/deepsearch/v1/chat/completions" \
-  -H "Authorization: Bearer $UNIFUNCS_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"model": "s2", "messages": [{"role": "user", "content": "$ARGUMENTS"}]}'
+## 触发条件
+
+当用户请求符合以下模式时，触发此技能：
+
+| 触发词 | 示例 | 说明 |
+|--------|------|------|
+| **ds** | "ds Python 异步编程" | 简写触发 |
+| **深度搜索** | "深度搜索 Claude API" | 完整触发词 |
+| **deep search** | "deep search React hooks" | 英文触发 |
+
+**不触发此技能的情况**：
+- "搜索 XXX"（不带"深度"）→ 使用 `unifuncs-web`
+- "读取网页 XXX" → 使用 `unifuncs-web`
+- "帮我了解一下 XXX" → 使用 `unifuncs-web`
+- "深度研究 XXX" → 使用 `unifuncs-research`
+
+---
+
+## 核心工作流程
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  用户请求：ds [关键词] 或 深度搜索 [关键词]                   │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Step 1: 分析搜索需求                                        │
+│  - 提取核心关键词                                            │
+│  - 判断是否需要限定网站范围                                   │
+│  - 选择合适的搜索深度和模型                                   │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Step 2: 执行深度搜索                                        │
+│  调用 search.py 脚本，API 自动完成：                         │
+│  - 搜索多个相关网页                                          │
+│  - 提取关键信息                                              │
+│  - 整合成结构化文章                                          │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Step 3: 展示结果                                            │
+│  - 直接展示 API 返回的汇总文章                               │
+│  - 如需更深入研究，建议使用 unifuncs-research                │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## 参数说明
+---
 
-| 参数 | 说明 | 默认值 |
-|------|------|--------|
-| messages | 搜索问题 | 必填 |
-| model | `s2` 或 `s1` | s2 |
+## Step 1: 分析搜索需求
 
-## 更多信息
+在执行搜索前，需要分析用户需求并确定参数：
 
-- 详细 API 文档见 [api.md](references/api.md)
+### 参数选择策略
+
+| 场景 | 推荐参数 |
+|------|----------|
+| 一般问题 | 默认即可 |
+| 技术文档 | `--domain` 限定官方站点 |
+| 排除低质量源 | `--blacklist "csdn.net"` |
+| 特定角色回答 | `--intro "你是..."` |
+
+> **深度参数**：默认 25（最全面），如需调整可根据具体情况设置 `--depth`。
+
+### 关键词优化建议
+
+- **具体化**：将模糊的问题转化为具体的搜索词
+- **技术术语**：使用准确的技术术语
+- **限定范围**：必要时添加限定词（如版本号、年份）
+
+---
+
+## Step 2: 执行深度搜索
+
+### 脚本调用
+
+```bash
+python3 ~/.claude/skills/unifuncs-search/scripts/search.py "[关键词]" [参数]
+```
+
+### 参数完整说明
+
+| 参数 | 简写 | 说明 | 默认值 |
+|------|------|------|--------|
+| `query` | - | 搜索查询内容 (必填) | - |
+| `--depth` | `-d` | 搜索深度 1-25 | 25 |
+| `--reference` | `-r` | 引用格式: link/character/hidden | link |
+| `--intro` | `-i` | 设定回答的角色和风格 | - |
+| `--domain` | - | 限定搜索网站 (逗号分隔) | - |
+| `--blacklist` | `-b` | 排除网站 (逗号分隔) | - |
+| `--prompt` | `-p` | 自定义输出提示词 | - |
+| `--timeout` | `-t` | API 请求超时时间(秒)，最低 900 | 900 |
+
+---
+
+## Step 3: 展示结果
+
+深度搜索 API 会直接返回**结构化的汇总文章**，包含：
+
+- 📋 **核心内容**：主题的关键信息
+- 🔗 **引用来源**：信息的出处链接
+- 📊 **结构化组织**：按逻辑组织的内容
+
+**直接展示 API 返回的内容即可**，无需额外处理。
+
+### 后续建议
+
+根据用户需求，可以建议：
+
+| 用户需求 | 建议操作 |
+|----------|----------|
+| 需要更深入的研究报告 | 使用 `unifuncs-research` |
+| 需要阅读特定网页原文 | 使用 `unifuncs-web` 的 reader |
+| 需要最新的实时信息 | 使用 `unifuncs-web` 的 search |
+
+---
+
+## 使用示例
+
+### 示例 1：基本深度搜索
+
+**用户**："ds Python 异步编程"
+
+```bash
+python3 ~/.claude/skills/unifuncs-search/scripts/search.py "Python 异步编程"
+```
+
+### 示例 2：限定官方来源
+
+**用户**："深度搜索 FastAPI 官方教程"
+
+```bash
+python3 ~/.claude/skills/unifuncs-search/scripts/search.py "FastAPI 教程" --domain "fastapi.tiangolo.com,github.com/tiangolo"
+```
+
+### 示例 3：排除低质量来源
+
+**用户**："深度搜索机器学习入门，不要 CSDN"
+
+```bash
+python3 ~/.claude/skills/unifuncs-search/scripts/search.py "机器学习入门" --blacklist "csdn.net"
+```
+
+### 示例 4：专家角色回答
+
+**用户**："ds Docker 容器化最佳实践，以 DevOps 专家的角度"
+
+```bash
+python3 ~/.claude/skills/unifuncs-search/scripts/search.py "Docker 容器化最佳实践" --intro "你是一位资深的 DevOps 工程师，擅长容器化和云原生技术"
+```
+
+---
+
+## 环境配置
+
+### 必需的环境变量
+
+```bash
+export UNIFUNCS_API_KEY="sk-your-api-key"
+```
+
+获取地址：[UniFuncs 账户页面](https://unifuncs.com/account)
+
+### 验证配置
+
+```bash
+# 检查环境变量是否已配置
+echo $UNIFUNCS_API_KEY
+```
+
+如果输出为空，说明未配置，请设置环境变量。
+
+---
+
+## 错误处理
+
+| 错误信息 | 原因 | 解决方案 |
+|----------|------|----------|
+| 未设置 UNIFUNCS_API_KEY | 环境变量未配置 | 设置 `export UNIFUNCS_API_KEY="sk-xxx"` |
+| API 请求失败 (HTTP 401) | API Key 无效或过期 | 检查 API Key 是否正确 |
+| API 请求失败 (HTTP 429) | 请求频率过高 | 稍后重试 |
+| 网络错误 | 网络连接问题 | 检查网络连接 |
